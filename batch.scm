@@ -10,10 +10,36 @@
 		  (output (string-append (string-append "output/" filename) ".jpg"))
                   (image (car (gimp-file-load RUN-NONINTERACTIVE
                                               filename filename)))
-                  (drawable (car (gimp-image-flatten image))))
+                  (drawable (car (gimp-image-flatten image)))
+		  (drawable-width (gimp-drawable-width drawable))
+		  (drawable-height (gimp-drawable-height drawable)))
 
 	     (gimp-image-scale image 640 480)
 
+	     (file-jpeg-save RUN-NONINTERACTIVE
+			     image drawable output output 1 0 1 0 "Created with Gimp" 0 1 0 0)
+             (gimp-image-delete image))
+           (set! filelist (cdr filelist)))))
+
+;; gimp -i -b '(batch-eight-publish "*.jpg")' -b '(gimp-quit 0)'
+;; 保持比例缩放横向到800px，若像素小于800px，忽略
+(define (batch-eight-publish pattern )
+  (let* ((filelist (cadr (file-glob pattern 1))))
+    (while (not (null? filelist))
+           (let* ((filename (car filelist))
+		  (output (string-append (string-append "output/" filename)))
+                  (image (car (gimp-file-load RUN-NONINTERACTIVE
+                                              filename filename)))
+                  (drawable (car (gimp-image-flatten image)))
+		  (drawable-width (car (gimp-drawable-width drawable)))
+		  (drawable-height (car (gimp-drawable-height drawable)))
+		  (p (/ 800 drawable-width))
+		  (height (* p drawable-height))
+		  (height (floor height))
+		  )
+	     (display drawable-width)
+	     (unless (< drawable-width 800)
+	     	     (gimp-image-scale image 800 height))
 	     (file-jpeg-save RUN-NONINTERACTIVE
 			     image drawable output output 1 0 1 0 "Created with Gimp" 0 1 0 0)
              (gimp-image-delete image))
